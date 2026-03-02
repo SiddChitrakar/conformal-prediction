@@ -1,0 +1,25 @@
+Metadata-Version: 2.4
+Name: my-project
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: scikit-learn>=1.3.0
+
+Setup with uv:
+
+```
+make install
+. .venv/bin/activate
+make fix
+make check
+```
+
+Run your project:
+
+```
+python -m src.main
+```
+
+See `EXPLANATION.md` for details about the template structure and tooling.
