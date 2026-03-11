@@ -1,49 +1,82 @@
-# Conformal Prediction Toy Example
+# Conformal Prediction for Ordinal Outcomes
 
-A simple implementation of **split conformal prediction** for multi-class classification.
+Implementation of **split conformal prediction** with standard and ordinal-aware scoring methods, plus comprehensive evaluation metrics.
 
-## What is Conformal Prediction?
-
-Conformal prediction is a framework that provides prediction sets with guaranteed coverage. Unlike standard classifiers that output a single prediction, conformal prediction outputs a **set** of possible labels for each input, with a statistical guarantee that the true label is contained in the set with probability at least `1 - alpha`.
-
-### Key Concepts
-
-- **Coverage**: P(Y ∈ C_hat(X)) ≥ 1 - α (marginally)
-- **Prediction Set**: A set of possible classes for each example
-- **Calibration**: Uses a held-out calibration set to set the prediction set threshold
-
-## Setup
+## Quick Start
 
 ```bash
 make install
 . .venv/bin/activate
-make fix
-make check
+
+# Run all demos
+python -m src.main              # Standard evaluation
+python -m src.compare           # Ordinal metrics breakdown
+python -m src.compare_all       # Full scoring comparison
 ```
 
-## Run the Example
+## Project Structure
 
-```bash
-python -m src.main
+| Script | Purpose | Key Figure |
+|--------|---------|------------|
+| `main.py` | Standard conformal prediction | Coverage guarantee |
+| `ordinal_metric.py` | Ordinal evaluation metrics | Prediction examples gallery |
+| `ordinal_score.py` | Ordinal-aware scoring implementation | — |
+| `compare.py` | Standard + ordinal metrics | Error severity breakdown |
+| `compare_all.py` | Standard vs. ordinal scoring | Coverage curves, by-class analysis |
+
+## Essential Figures (6 total)
+
+| Figure | Script | What It Shows |
+|--------|--------|---------------|
+| `standard_coverage.png` | `main.py` | **CP guarantee**: empirical coverage vs target (91% vs 90%) |
+| `error_breakdown.png` | `compare.py` | **Why ordinal matters**: correct vs. near miss (7.8%) vs. far miss (1.3%) |
+| `prediction_examples.png` | `ordinal_metric.py` | **What sets look like**: gallery by quality |
+| `coverage_vs_alpha_compare.png` | `compare_all.py` | **CP guarantee across α**: standard vs. ordinal scoring |
+| `coverage_by_class.png` | `compare_all.py` | **By-stage analysis**: coverage and contiguity for each cancer stage |
+| `examples_comparison.png` | `compare_all.py` | **Side-by-side**: standard vs. ordinal predictions |
+| `set_size_compare.png` | `compare_all.py` | **Efficiency**: set size distributions |
+
+## Methods
+
+### Standard Conformal Prediction
+```
+Score: s(x, y) = 1 - p(y|x)
 ```
 
-### Expected Output
-
-The example demonstrates:
-- **Split conformal prediction** using a Random Forest base classifier
-- **4-class classification** on synthetic data
-- **90% target coverage** (α = 0.1)
-- Empirical coverage close to the target
-- Average prediction set size showing efficiency
-
-### Results
-
+### Ordinal Conformal Prediction
 ```
-Target coverage: 90.0%
-Empirical coverage: 91.20%
-Average prediction set size: 1.39 classes
+Score: s(x, y) = Σ_y' |y' - y| × p(y'|x)
 ```
 
-The empirical coverage should be close to the target 90%, demonstrating the coverage guarantee. The average prediction set size shows how many classes are typically included per example.
+Ordinal scoring penalizes probability mass on distant classes more than adjacent classes.
 
-See `EXPLANATION.md` for details about the template structure and tooling.
+## Key Results
+
+| Metric | Standard | Ordinal Scoring | Difference |
+|--------|----------|-----------------|------------|
+| Coverage | 90.89% | 90.67% | -0.22% |
+| Avg Set Size | 1.72 | 1.82 | +6% |
+| Contiguity Rate | 99.78% | 99.56% | -0.22% |
+| Weighted Error | 0.0267 | 0.0294 | +0.0028 |
+
+**Finding:** Ordinal scoring produces slightly larger sets but doesn't significantly improve ordinal metrics on this synthetic dataset. The base classifier already produces smooth probability distributions.
+
+## Coverage by Stage
+
+The `coverage_by_class.png` figure reveals:
+- **Normal stage**: Highest coverage (~96%), best predicted
+- **Stage 1-3**: Coverage near target (88-90%)
+- **Stage 4**: No samples in test set (due to class imbalance)
+- **Contiguity**: ~100% for all stages (both methods produce intervals)
+
+This shows the method works consistently across stages, with slightly better performance on early/normal stages.
+
+## Data
+
+Synthetic ordinal data with realistic characteristics:
+- Class imbalance (more early-stage, fewer late-stage)
+- Heterogeneous variance (later stages more variable)
+- 5% label noise
+- Ordinal structure (adjacent classes closer in feature space)
+
+**Note:** Results may differ on real ordinal datasets (medical staging, Likert scales, etc.).

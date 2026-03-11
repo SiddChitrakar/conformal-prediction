@@ -6,20 +6,32 @@ Requires-Python: >=3.12
 Description-Content-Type: text/markdown
 Requires-Dist: numpy>=1.24.0
 Requires-Dist: scikit-learn>=1.3.0
+Requires-Dist: matplotlib>=3.8.0
 
-# Conformal Prediction Toy Example
+# Conformal Prediction
 
-A simple implementation of **split conformal prediction** for multi-class classification.
+Implementation of **split conformal prediction** for classification, with extensions for ordinal outcomes.
 
 ## What is Conformal Prediction?
 
-Conformal prediction is a framework that provides prediction sets with guaranteed coverage. Unlike standard classifiers that output a single prediction, conformal prediction outputs a **set** of possible labels for each input, with a statistical guarantee that the true label is contained in the set with probability at least `1 - alpha`.
+Conformal prediction provides prediction **sets** with guaranteed coverage. Unlike standard classifiers that output a single label, conformal prediction outputs a set of possible labels with a statistical guarantee that the true label is contained with probability ≥ 1 - α.
 
 ### Key Concepts
 
-- **Coverage**: P(Y ∈ C_hat(X)) ≥ 1 - α (marginally)
-- **Prediction Set**: A set of possible classes for each example
-- **Calibration**: Uses a held-out calibration set to set the prediction set threshold
+- **Coverage**: P(Y ∈ Ĉ(X)) ≥ 1 - α (marginally)
+- **Prediction Set**: Set of possible classes for each example
+- **Calibration**: Uses held-out data to set the threshold
+
+## Ordinal Conformal Prediction
+
+For ordinal outcomes (e.g., cancer stages 0-4), not all errors are equal. Predicting {Normal, Stage 4} is worse than {Stage 3, Stage 4} because the latter is a contiguous interval.
+
+This repo demonstrates **ordinal-aware evaluation metrics** that measure:
+- **Contiguity rate**: Proportion of prediction sets that are contiguous intervals
+- **Ordinal spread**: Average (max - min) class index in each set
+- **Weighted error**: Penalizes misses by distance to nearest included class
+
+Key insight: Use ordinal metrics for **evaluation** without modifying the conformal scoring function. This allows fair comparison between methods.
 
 ## Setup
 
@@ -30,29 +42,47 @@ make fix
 make check
 ```
 
-## Run the Example
+## Run
 
+### Basic Example (text output)
 ```bash
 python -m src.main
 ```
 
-### Expected Output
+### Ordinal Demo with Visualizations
+```bash
+python -m src.ordinal_demo
+```
 
-The example demonstrates:
-- **Split conformal prediction** using a Random Forest base classifier
-- **4-class classification** on synthetic data
-- **90% target coverage** (α = 0.1)
-- Empirical coverage close to the target
-- Average prediction set size showing efficiency
+Visualizations are saved to `figures/`:
+- `prediction_sets_with_gaps.png` - Prediction sets highlighting ordinal gaps
+- `probability_distributions.png` - Example probability distributions
+- `set_size_distribution.png` - Distribution of prediction set sizes
+- `ordinal_spread_by_class.png` - Spread by true class
+- `metrics_radar.png` - Radar chart of ordinal-aware metrics
 
-### Results
+## Example Output
 
+### Basic Example
 ```
 Target coverage: 90.0%
-Empirical coverage: 91.20%
-Average prediction set size: 1.39 classes
+Empirical coverage: 91.80%
+Average set size: 1.43 classes
 ```
 
-The empirical coverage should be close to the target 90%, demonstrating the coverage guarantee. The average prediction set size shows how many classes are typically included per example.
+### Ordinal Demo
+```
+Coverage:           91.00%
+Avg Set Size:       1.52 classes
+Avg Ordinal Spread: 0.52
+Contiguity Rate:    100.00%
+Weighted Error:     0.0225
+```
 
-See `EXPLANATION.md` for details about the template structure and tooling.
+## Project Structure
+
+```
+src/
+├── main.py           # Basic conformal prediction example
+└── ordinal_demo.py   # Ordinal-aware evaluation with visualizations
+```

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Conformal Prediction Toy Example for Classification.
+Conformal Prediction - Basic Example.
 
 This module demonstrates split conformal prediction for multi-class classification.
-The key idea is to create prediction sets with guaranteed marginal coverage.
+For an ordinal-aware demo with visualizations, run:
+    python -m src.ordinal_demo
 """
 
 import numpy as np
@@ -117,12 +118,16 @@ def generate_synthetic_data(n_samples: int = 1000, n_classes: int = 3):
 def main():
     """Run the conformal prediction demonstration."""
     print("=" * 60)
-    print("Conformal Prediction Toy Example")
+    print("Conformal Prediction - Basic Example")
     print("=" * 60)
     print()
+    print("For ordinal-aware demo with visualizations, run:")
+    print("    python -m src.ordinal_demo")
+    print()
+    print("=" * 60)
 
     # Configuration
-    ALPHA = 0.1  # Target error rate (90% coverage)
+    ALPHA = 0.1
     N_CLASSES = 4
     N_SAMPLES = 2000
 
@@ -130,11 +135,8 @@ def main():
     print(f"Number of classes: {N_CLASSES}")
     print()
 
-    # Generate data
+    # Generate and split data
     X, y = generate_synthetic_data(n_samples=N_SAMPLES, n_classes=N_CLASSES)
-
-    # Split into proper training, calibration, and test sets
-    # 50% train, 25% calibrate, 25% test
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=0.5, random_state=42
     )
@@ -142,23 +144,14 @@ def main():
         X_temp, y_temp, test_size=0.5, random_state=42
     )
 
-    print(f"Training set size: {len(X_train)}")
-    print(f"Calibration set size: {len(X_cal)}")
-    print(f"Test set size: {len(X_test)}")
-    print()
-
-    # Initialize conformal classifier with a base model
+    # Train and evaluate
     base_model = RandomForestClassifier(n_estimators=100, random_state=42)
     conformal_classifier = SplitConformalClassifier(base_model, alpha=ALPHA)
-
-    # Train with split conformal
     conformal_classifier.fit(X_train, y_train, X_cal, y_cal)
-
-    # Generate prediction sets for test data
     prediction_sets = conformal_classifier.predict_set(X_test)
 
     # Evaluate coverage
-    # Coverage = proportion of test samples where true class is in prediction set
+    assert conformal_classifier.classes_ is not None
     coverage = np.mean(
         [
             prediction_sets[
@@ -167,37 +160,13 @@ def main():
             for i in range(len(y_test))
         ]
     )
-
-    # Average prediction set size
     avg_set_size = np.mean(np.sum(prediction_sets, axis=1))
 
     print("Results:")
     print("-" * 60)
     print(f"Empirical coverage: {coverage * 100:.2f}%")
     print(f"Target coverage:    {(1 - ALPHA) * 100:.2f}%")
-    print(f"Average prediction set size: {avg_set_size:.2f} classes")
-    print()
-
-    # Show example predictions
-    print("Example predictions (first 5 test samples):")
-    print("-" * 60)
-    assert conformal_classifier.classes_ is not None
-    for i in range(5):
-        row = prediction_sets[i]
-        pred_set = [
-            int(cls)
-            for cls, included in zip(conformal_classifier.classes_, row, strict=True)
-            if included
-        ]
-        true_class = int(y_test[i])
-        standard_pred = int(conformal_classifier.predict(X_test[i : i + 1])[0])
-
-        print(f"Sample {i + 1}:")
-        print(f"  True class:          {true_class}")
-        print(f"  Standard prediction: {standard_pred}")
-        print(f"  Prediction set:      {pred_set}")
-        print(f"  Correctly covered:   {'Yes' if true_class in pred_set else 'No'}")
-        print()
+    print(f"Average set size:   {avg_set_size:.2f} classes")
 
 
 if __name__ == "__main__":

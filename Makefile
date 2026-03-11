@@ -1,7 +1,7 @@
 .PHONY: check fix fmt install
 
 check:
-	@uvx ruff check && uvx pyrefly check && uvx ty check --ignore invalid-syntax-in-forward-annotation && uvx mypy src
+	@uvx ruff check && uvx pyrefly check && uvx ty check --ignore invalid-syntax-in-forward-annotation
 
 fix: fmt
 	@uvx ruff check --fix

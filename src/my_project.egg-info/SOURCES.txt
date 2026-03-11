@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 src/main.py
+src/ordinal_demo.py
 src/my_project.egg-info/PKG-INFO
 src/my_project.egg-info/SOURCES.txt
 src/my_project.egg-info/dependency_links.txt
